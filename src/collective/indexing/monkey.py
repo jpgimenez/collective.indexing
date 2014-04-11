@@ -12,6 +12,11 @@ from collective.indexing.indexer import catalogAwareMethods
 from collective.indexing.indexer import monkeyMethods
 from collective.indexing.indexer import index, reindex, unindex
 from collective.indexing.subscribers import filterTemporaryItems
+try:
+    from plone.app.folder.nogopip import GopipIndex
+    GOIPINDEX_SUPPORT = True
+except ImportError:
+    GOIPINDEX_SUPPORT = False
 
 logger = getLogger(__name__)
 debug = logger.debug
@@ -160,6 +165,10 @@ from Products.CMFPlone.PloneTool import PloneTool
 
 def reindexOnReorder(self, parent):
     """ Catalog ordering support """
+    catalog = getToolByName(self, 'portal_catalog')
+    index = catalog.Indexes.get('getObjPositionInParent')
+    if GOIPINDEX_SUPPORT and isinstance(index, GopipIndex):
+        return
     mtool = getToolByName(self, 'portal_membership')
     if mtool.checkPermission(ModifyPortalContent, parent):
         for obj in parent.objectValues():
